@@ -137,12 +137,17 @@ namespace WindowsProgramming_Assignment
             Graphics.FillRectangle(new SolidBrush(Color.DodgerBlue), Window);
             Graphics.DrawRectangle(BorderPen, Window);
 
-            for (int i = 0; i < this.Width; i += 50)
+            using (var font = new Font("Arial", 13))
             {
-                Graphics.DrawLine(LinePen, new Point(i, 0), new Point(i, (2 - (i % 100) / 50) * this.Height / 4));
+                for (var i = 0; i < this.Width; i += 50)
+                {
+                    Graphics.DrawLine(LinePen, new Point(i, 0), new Point(i, (2 - (i % 100) / 50) * this.Height / 4));
 
-                if (i % 100 == 0)
-                    Graphics.DrawString( i + "px", new Font("Arial", 13), new SolidBrush(Color.Black), new PointF(i, 27));
+                    if (i % 100 == 0)
+                    {
+                        Graphics.DrawString(i + "px", font, Brushes.Black, new PointF(i, 27));
+                    }
+                }
             }
         }
     }
