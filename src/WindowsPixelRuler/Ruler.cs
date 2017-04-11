@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
-namespace WindowsProgramming_Assignment
+namespace ScreenPixelRuler
 {
-    class Ruler : Form
+    internal sealed class Ruler : Form
     {
         #region Win32 API Imports
-
+        // ReSharper disable InconsistentNaming
         private const long LWA_ALPHA = 0x2L;
         private const int GWL_EXSTYLE = (-20);
         private const int WS_EX_LAYERED = 0x80000;
@@ -25,28 +22,28 @@ namespace WindowsProgramming_Assignment
         public static extern bool ReleaseCapture();
 
         [DllImport("user32.dll")]
-        static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
+        private static extern bool SetLayeredWindowAttributes(IntPtr hwnd, uint crKey, byte bAlpha, uint dwFlags);
 
         [DllImport("user32.dll")]
-        static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
         [DllImport("user32.dll")]
-        static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
         [DllImport("User32.dll")]
         public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
-
+        // ReSharper restore InconsistentNaming
         #endregion
 
         private const int BorderThickness = 5;
         private const int LineThickness = 3;
 
-        ContextMenu menu = new ContextMenu();
-        MenuItem exitItem = new MenuItem("Exit Ruler Applicaiton");
+        private readonly ContextMenu _menu = new ContextMenu();
+        private readonly MenuItem _exitItem = new MenuItem("Exit Ruler Application");
 
-        public Ruler( int InitialWidth )
+        public Ruler( int initialWidth )
         {
-            Width = InitialWidth;
+            Width = initialWidth;
 
             MinimumSize = new Size(300, 50);
             MaximumSize = new Size(SystemInformation.VirtualScreen.Width, 50);
@@ -58,15 +55,15 @@ namespace WindowsProgramming_Assignment
                 Invalidate();
             };
 
-            menu.MenuItems.Add(exitItem);
-            exitItem.Click += delegate
+            _menu.MenuItems.Add(_exitItem);
+            _exitItem.Click += delegate
             {
                 //make the application quit when this item is clicked
                 Application.Exit();
             };
 
-            MouseUp += new MouseEventHandler(Ruler_MouseUp);
-            MouseDown += new MouseEventHandler(Ruler_MouseDown);
+            MouseUp += Ruler_MouseUp;
+            MouseDown += Ruler_MouseDown;
 
             //make the ruler transparent using win32 api calls
             var opacity = (byte)((255 * 80) / 100);
@@ -74,16 +71,15 @@ namespace WindowsProgramming_Assignment
             SetLayeredWindowAttributes(Handle, 0, opacity, (uint)LWA_ALPHA);
         }
 
-        void Ruler_MouseDown(object sender, MouseEventArgs e)
+        private void Ruler_MouseDown(object sender, MouseEventArgs e)
         {
+            if (e.Button != MouseButtons.Left) return;
+
             //allows dragging of the ruler
-            if (e.Button == MouseButtons.Left)
-            {
-                ReleaseCapture();
-                //trick the application into thinking that the title bar is being clicked
-                //this forces the application to move along with the mouse
-                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
-            }
+            ReleaseCapture();
+            //trick the application into thinking that the title bar is being clicked
+            //this forces the application to move along with the mouse
+            SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
         }
 
         protected override void WndProc(ref Message m)
@@ -115,11 +111,11 @@ namespace WindowsProgramming_Assignment
             base.WndProc(ref m);
         }
 
-        void Ruler_MouseUp(object sender, MouseEventArgs e)
+        private void Ruler_MouseUp(object sender, MouseEventArgs e)
         {
             //opens a context sensitive menu when the right button is pressed
             if (e.Button == MouseButtons.Right)
-                menu.Show(this, new Point(e.X, e.Y));
+                _menu.Show(this, new Point(e.X, e.Y));
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -128,24 +124,29 @@ namespace WindowsProgramming_Assignment
             DrawRuler( e.Graphics);
         }
 
-        protected void DrawRuler( Graphics Graphics)
+        private void DrawRuler(Graphics graphics)
         {
-            var BorderPen = new Pen(new SolidBrush(Color.Black), BorderThickness);
-            var LinePen = new Pen(new SolidBrush(Color.Black), LineThickness);
-            var Window = new Rectangle(0, 0, Width - 1, Height - 1);
+            var window = new Rectangle(0, 0, Width - 1, Height - 1);
 
-            Graphics.FillRectangle(new SolidBrush(Color.DodgerBlue), Window);
-            Graphics.DrawRectangle(BorderPen, Window);
-
-            using (var font = new Font("Arial", 13))
+            using (var borderPen = new Pen(Brushes.Black, BorderThickness))
             {
-                for (var i = 0; i < Width; i += 50)
+                using (var linePen = new Pen(Brushes.Black, LineThickness))
                 {
-                    Graphics.DrawLine(LinePen, new Point(i, 0), new Point(i, (2 - (i % 100) / 50) * Height / 4));
+                    graphics.FillRectangle(Brushes.DodgerBlue, window);
+                    graphics.DrawRectangle(borderPen, window);
 
-                    if (i % 100 == 0)
+                    using (var font = new Font("Arial", 13))
                     {
-                        Graphics.DrawString(i + "px", font, Brushes.Black, new PointF(i, 27));
+                        for (var i = 0; i < Width; i += 50)
+                        {
+                            graphics.DrawLine(linePen, new Point(i, 0),
+                                new Point(i, (2 - i % 100 / 50) * Height / 4));
+
+                            if (i % 100 == 0)
+                            {
+                                graphics.DrawString(i + "px", font, Brushes.Black, new PointF(i, 27));
+                            }
+                        }
                     }
                 }
             }
