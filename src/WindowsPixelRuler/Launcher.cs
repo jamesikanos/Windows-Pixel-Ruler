@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 
-namespace WindowsProgramming_Assignment
+namespace ScreenPixelRuler
 {
-    class Launcher
+    internal class Launcher
     {
         public static void Main()
         {
