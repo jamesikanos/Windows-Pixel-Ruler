@@ -46,16 +46,16 @@ namespace WindowsProgramming_Assignment
 
         public Ruler( int InitialWidth )
         {
-            this.Width = InitialWidth;
+            Width = InitialWidth;
 
-            this.MinimumSize = new Size(300, 50);
-            this.MaximumSize = new Size(SystemInformation.VirtualScreen.Width, 50);
-            this.FormBorderStyle = FormBorderStyle.None;
-            this.TopMost = true; 
-            this.SizeChanged += delegate
+            MinimumSize = new Size(300, 50);
+            MaximumSize = new Size(SystemInformation.VirtualScreen.Width, 50);
+            FormBorderStyle = FormBorderStyle.None;
+            TopMost = true; 
+            SizeChanged += delegate
             {
                 //when the ruler is resized, invalidate the form so that it is repainted
-                this.Invalidate();
+                Invalidate();
             };
 
             menu.MenuItems.Add(exitItem);
@@ -65,11 +65,11 @@ namespace WindowsProgramming_Assignment
                 Application.Exit();
             };
 
-            this.MouseUp += new MouseEventHandler(Ruler_MouseUp);
-            this.MouseDown += new MouseEventHandler(Ruler_MouseDown);
+            MouseUp += new MouseEventHandler(Ruler_MouseUp);
+            MouseDown += new MouseEventHandler(Ruler_MouseDown);
 
             //make the ruler transparent using win32 api calls
-            byte opacity = (byte)((255 * 80) / 100);
+            var opacity = (byte)((255 * 80) / 100);
             SetWindowLong(Handle, GWL_EXSTYLE, GetWindowLong(Handle, GWL_EXSTYLE) ^ WS_EX_LAYERED);
             SetLayeredWindowAttributes(Handle, 0, opacity, (uint)LWA_ALPHA);
         }
@@ -94,11 +94,11 @@ namespace WindowsProgramming_Assignment
             if (m.Msg == wmNcHitTest)
             {
                 //get the x and y position of the mouse from the message
-                int x = (int)(m.LParam.ToInt64() & 0xFFFF);
-                int y = (int)((m.LParam.ToInt64() & 0xFFFF0000) >> 16);
+                var x = (int)(m.LParam.ToInt64() & 0xFFFF);
+                var y = (int)((m.LParam.ToInt64() & 0xFFFF0000) >> 16);
 
                 //change the x and y coordinates relative to the application
-                Point pt = PointToClient(new Point(x, y));
+                var pt = PointToClient(new Point(x, y));
                 
                 //check if the mouse in an area which allows the mouse to resize, if so change to allow it
                 if (pt.X <= ClientSize.Width && pt.X >= ClientSize.Width - BorderThickness )
@@ -130,18 +130,18 @@ namespace WindowsProgramming_Assignment
 
         protected void DrawRuler( Graphics Graphics)
         {
-            Pen BorderPen = new Pen(new SolidBrush(Color.Black), BorderThickness);
-            Pen LinePen = new Pen(new SolidBrush(Color.Black), LineThickness);
-            Rectangle Window = new Rectangle(0, 0, this.Width - 1, this.Height - 1);
+            var BorderPen = new Pen(new SolidBrush(Color.Black), BorderThickness);
+            var LinePen = new Pen(new SolidBrush(Color.Black), LineThickness);
+            var Window = new Rectangle(0, 0, Width - 1, Height - 1);
 
             Graphics.FillRectangle(new SolidBrush(Color.DodgerBlue), Window);
             Graphics.DrawRectangle(BorderPen, Window);
 
             using (var font = new Font("Arial", 13))
             {
-                for (var i = 0; i < this.Width; i += 50)
+                for (var i = 0; i < Width; i += 50)
                 {
-                    Graphics.DrawLine(LinePen, new Point(i, 0), new Point(i, (2 - (i % 100) / 50) * this.Height / 4));
+                    Graphics.DrawLine(LinePen, new Point(i, 0), new Point(i, (2 - (i % 100) / 50) * Height / 4));
 
                     if (i % 100 == 0)
                     {
